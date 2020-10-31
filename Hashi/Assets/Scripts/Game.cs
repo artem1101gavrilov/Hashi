@@ -30,17 +30,33 @@ public class Game : MonoBehaviour
     private float stepVertical;
 
     private List<(int x, int y)> openPoint = new List<(int x, int y)>();
+    private List<(int first, int second)> links = new List<(int first, int second)>();
 
     /// <summary>
     /// Список всех узлов в игре
     /// </summary>
-    private List<Node> nodes;
+    private List<Node> nodes = new List<Node>();
     private static int idNode = 1;
+    private static int currentId = 0;
 
     private void Start()
     {
         SetSizes();
         SetGameArray();
+        SetPowers();
+    }
+
+    private void Update()
+    {
+        if(Input.GetKeyDown(KeyCode.Space))
+        {
+            for (int i = 0; i < transform.childCount; i++)
+            {
+                Destroy(transform.GetChild(i).gameObject);
+            }
+            SetGameArray();
+            SetPowers();
+        }
     }
 
     private void SetSizes()
@@ -55,9 +71,15 @@ public class Game : MonoBehaviour
 
     private void SetGameArray()
     {
+        idNode = 1;
+        currentId = 0;
+        gameArray = new int[sizeHorizontal, sizeVertical];
+        nodes = new List<Node>();
+        links = new List<(int first, int second)>();
+
         int x = Random.Range(0, sizeHorizontal);
         int y = Random.Range(0, sizeVertical);
-        gameArray[x, y] = idNode++;
+        gameArray[x, y] = idNode;
         openPoint.Add((x, y));
         GenerationGameArray();
         CreateAllNodes();
@@ -69,6 +91,7 @@ public class Game : MonoBehaviour
         while (openPoint.Count > 0)
         {
             var currentPoint = openPoint[0];
+            ++currentId;
             openPoint.Remove(currentPoint);
 
             // Проверяем где могут быть новые узлы от данного
@@ -91,11 +114,27 @@ public class Game : MonoBehaviour
             // Создаем новые узлы
             foreach (var direction in possibleDirection)
             {
-                var lengthDirection = Random.Range(0, 3);
+                var lengthDirection = GetRandomLength();
                 switch (direction)
                 {
                     case DirectionNewNode.Up:
-                        
+                        int up = currentPoint.x - 1;
+                        for (; up >= 0 && up > currentPoint.x - lengthDirection; up--)
+                        {
+                            if (gameArray[up, currentPoint.y] == 0)
+                            {
+                                gameArray[up, currentPoint.y] = -1;
+                            }
+                            else
+                            {
+                                up++;
+                                break;
+                            }
+                        }
+                        if (up < 0) up = 0;
+                        gameArray[up, currentPoint.y] = ++idNode;
+                        openPoint.Add((up, currentPoint.y));
+                        links.Add((currentId, idNode));
                         break;
                     case DirectionNewNode.Left:
                         int i = currentPoint.y - 1;
@@ -112,40 +151,67 @@ public class Game : MonoBehaviour
                             }
                         }
                         if (i < 0) i = 0;
-                        gameArray[currentPoint.x, i] = idNode++;
+                        gameArray[currentPoint.x, i] = ++idNode;
                         openPoint.Add((currentPoint.x, i));
+                        links.Add((currentId, idNode));
                         break;
                     case DirectionNewNode.Down:
+                        int down = currentPoint.x + 1;
+                        for (; down < sizeHorizontal && down < currentPoint.x + lengthDirection; down++)
+                        {
+                            if (gameArray[down, currentPoint.y] == 0)
+                            {
+                                gameArray[down, currentPoint.y] = -1;
+                            }
+                            else
+                            {
+                                down--;
+                                break;
+                            }
+                        }
+                        if (down >= sizeHorizontal) down = sizeHorizontal - 1;
+                        gameArray[down, currentPoint.y] = ++idNode;
+                        openPoint.Add((down, currentPoint.y));
+                        links.Add((currentId, idNode));
                         break;
                     case DirectionNewNode.Right:
-
+                        int right = currentPoint.y + 1;
+                        for (; right < sizeVertical && right < currentPoint.y + lengthDirection; right++)
+                        {
+                            if (gameArray[currentPoint.x, right] == 0)
+                            {
+                                gameArray[currentPoint.x, right] = -1;
+                            }
+                            else
+                            {
+                                right--;
+                                break;
+                            }
+                        }
+                        if (right >= sizeVertical) right = sizeVertical - 1;
+                        gameArray[currentPoint.x, right] = ++idNode;
+                        openPoint.Add((currentPoint.x, right));
+                        links.Add((currentId, idNode));
                         break;
                 }
             }
         }
     }
 
-    private bool CheckUp((int x, int y) currentPoint)
-    {
-        if (currentPoint.y > 0 && gameArray[currentPoint.x, currentPoint.y - 1] == 0)
-        {
-            return true;
-        }
-        return false;
-    }
-
     private bool CheckLeft((int x, int y) currentPoint)
     {
-        if (currentPoint.x > 0 && gameArray[currentPoint.x - 1, currentPoint.y] == 0)
+        if (currentPoint.y > 1 && gameArray[currentPoint.x, currentPoint.y - 1] == 0 &&
+            gameArray[currentPoint.x, currentPoint.y - 2] == 0)
         {
             return true;
         }
         return false;
     }
 
-    private bool CheckDown((int x, int y) currentPoint)
+    private bool CheckUp((int x, int y) currentPoint)
     {
-        if (currentPoint.y < (sizeVertical - 1) && gameArray[currentPoint.x, currentPoint.y + 1] == 0)
+        if (currentPoint.x > 1 && gameArray[currentPoint.x - 1, currentPoint.y] == 0 &&
+            gameArray[currentPoint.x - 2, currentPoint.y] == 0)
         {
             return true;
         }
@@ -154,7 +220,16 @@ public class Game : MonoBehaviour
 
     private bool CheckRight((int x, int y) currentPoint)
     {
-        if (currentPoint.x < (sizeHorizontal - 1) && gameArray[currentPoint.x + 1, currentPoint.y] == 0)
+        if (currentPoint.y < (sizeVertical - 2) && gameArray[currentPoint.x, currentPoint.y + 1] == 0 && gameArray[currentPoint.x, currentPoint.y + 2] == 0)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    private bool CheckDown((int x, int y) currentPoint)
+    {
+        if (currentPoint.x < (sizeHorizontal - 2) && gameArray[currentPoint.x + 1, currentPoint.y] == 0 && gameArray[currentPoint.x + 2, currentPoint.y] == 0)
         {
             return true;
         }
@@ -169,10 +244,39 @@ public class Game : MonoBehaviour
             {
                 if(gameArray[i, j] > 0)
                 {
-                    Instantiate(NodePrefab, new Vector3(leftSize + j * stepHorizontal, upSize - i * stepVertical), Quaternion.identity, transform);
+                    var node = Instantiate(NodePrefab, new Vector3(leftSize + j * stepHorizontal, upSize - i * stepVertical), Quaternion.identity, transform).GetComponent<Node>();
+                    node.Id = gameArray[i, j];
+                    node.gamePosition = (i, j);
+                    nodes.Add(node);
                 }
             }
         }
+
+        nodes = nodes.OrderBy(n => n.Id).ToList();
+    }
+
+    private void SetPowers()
+    {
+        foreach (var link in links)
+        {
+            var rnd = Random.Range(1, 4);
+            nodes[link.first - 1].Power += rnd;
+            nodes[link.second - 1].Power += rnd;
+        }
+        foreach (var node in nodes)
+        {
+            node.PrintPower();
+        }
+    }
+
+    private int GetRandomLength()
+    {
+        var a = Random.Range(1, 101);
+        if (a <= 15) return 0;
+        if (a <= 50) return 1;
+        if (a <= 85) return 2;
+        if (a <= 98) return 3;
+        return 4;
     }
 }
 
