@@ -247,6 +247,7 @@ public class Game : MonoBehaviour
                     var node = Instantiate(NodePrefab, new Vector3(leftSize + j * stepHorizontal, upSize - i * stepVertical), Quaternion.identity, transform).GetComponent<Node>();
                     node.Id = gameArray[i, j];
                     node.gamePosition = (i, j);
+                    node.game = this;
                     nodes.Add(node);
                 }
             }
