@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 using UnityEngine.EventSystems;
 
@@ -13,6 +14,12 @@ public class Node : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
     private List<NodeLink> links = new List<NodeLink>();
     public (int x, int y) gamePosition { get; set; }
     public Game game;
+    private Image colorNode;
+
+    private void Start()
+    {
+        colorNode = GetComponent<Image>();
+    }
 
     public void PrintPower()
     {
@@ -77,6 +84,7 @@ public class Node : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
             if (link.Line.Rank < Game.MaxLine)
             {
                 link.Line.SetNewRank();
+                DecreasePowerNodesLink(link);
             }
             else
             {
@@ -84,6 +92,7 @@ public class Node : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
                 link.Line.DestroyLine();
                 links.Remove(link);
                 link.SecondNode.RemoveLink(link);
+                IncreasePowerNodesLink(link);
             }
         }
         else if (game.TryGetLink(gamePosition, direction, out var node, out var line))
@@ -91,6 +100,56 @@ public class Node : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
             var newLink = new NodeLink() { FirstNode = this, SecondNode = node, direction = direction, Line = line };
             links.Add(newLink);
             node.AddLink(newLink);
+            DecreasePowerNodesLink(newLink);
         }
+    }
+
+    
+
+    private void IncreasePowerNodesLink(NodeLink nodeLink)
+    {
+        nodeLink.FirstNode.CurrentPower += Game.MaxLine;
+        nodeLink.FirstNode.ChangeColor();
+        nodeLink.SecondNode.CurrentPower += Game.MaxLine;
+        nodeLink.SecondNode.ChangeColor();
+    }
+
+    private void DecreasePowerNodesLink(NodeLink nodeLink)
+    {
+        nodeLink.FirstNode.CurrentPower--;
+        nodeLink.FirstNode.ChangeColor();
+        nodeLink.SecondNode.CurrentPower--;
+        nodeLink.SecondNode.ChangeColor();
+    }
+
+    protected void ChangeColor()
+    {
+        if(CurrentPower == 0)
+        {
+            SetFinishColor();
+        }
+        else if(CurrentPower > 0)
+        {
+            SetNormalColor();
+        }
+        else
+        {
+            SetErrorColor();
+        }
+    }
+
+    protected void SetErrorColor()
+    {
+        colorNode.color = new Color(1, 0, 0);
+    }
+
+    protected void SetFinishColor()
+    {
+        colorNode.color = new Color(0, 1, 1);
+    }
+
+    protected void SetNormalColor()
+    {
+        colorNode.color = new Color(1, 1, 1);
     }
 }

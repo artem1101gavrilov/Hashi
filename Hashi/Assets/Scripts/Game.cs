@@ -9,7 +9,7 @@ public class Game : MonoBehaviour
 
     private const int sizeHorizontal = 7;
     private const int sizeVertical = 10;
-    public const int MaxLine = 3;
+    public static int MaxLine = 3;
 
     /// <summary>
     /// Игровое поле.
@@ -42,22 +42,14 @@ public class Game : MonoBehaviour
 
     private void Start()
     {
+        //CreateGame()
+    }
+
+    public void CreateGame()
+    {
         SetSizes();
         SetGameArray();
         SetPowers();
-    }
-
-    private void Update()
-    {
-        if(Input.GetKeyDown(KeyCode.Space))
-        {
-            for (int i = 0; i < transform.childCount; i++)
-            {
-                Destroy(transform.GetChild(i).gameObject);
-            }
-            SetGameArray();
-            SetPowers();
-        }
     }
 
     public void DestroyLine((int x, int y) position, DirectionNewNode direction)
