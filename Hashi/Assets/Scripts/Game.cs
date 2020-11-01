@@ -9,7 +9,7 @@ public class Game : MonoBehaviour
 
     private const int sizeHorizontal = 7;
     private const int sizeVertical = 10;
-    public const int MaxLine = 2;
+    public const int MaxLine = 3;
 
     /// <summary>
     /// Игровое поле.
