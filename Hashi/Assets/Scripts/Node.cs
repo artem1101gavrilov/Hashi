@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
@@ -20,6 +20,19 @@ public class Node : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         Text.text = Power.ToString();
     }
 
+    public void AddLink(NodeLink link)
+    {
+        var direction = ((int)link.direction) % 2 == 0 ? (DirectionNewNode)(((int)link.direction) + 1) : (DirectionNewNode)(((int)link.direction) - 1);
+        var newLink = new NodeLink() { FirstNode = this, SecondNode = link.FirstNode, direction = direction, Line = link.Line };
+        links.Add(newLink);
+    }
+
+    public void RemoveLink(NodeLink link)
+    {
+        var removedLink = links.First(l => l.SecondNode == link.FirstNode);
+        links.Remove(removedLink);
+    }
+
     #region IBeginDragHandler implementation
     public void OnBeginDrag(PointerEventData eventData)
     {
@@ -37,7 +50,47 @@ public class Node : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
     {
         var direction = Camera.main.ScreenToWorldPoint(eventData.position) - transform.position;
         var angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-        Debug.Log(angle);
+        if (Mathf.Abs(angle) <= 45)
+        {
+            CreateOrUpdateLine(DirectionNewNode.Right);
+        }
+        else if (angle > 45 && angle <= 135)
+        {
+            CreateOrUpdateLine(DirectionNewNode.Up);
+        }
+        else if (angle < -45 && angle >= -135)
+        {
+            CreateOrUpdateLine(DirectionNewNode.Down);
+        }
+        else
+        {
+            CreateOrUpdateLine(DirectionNewNode.Left);
+        }
     }
     #endregion
+
+    private void CreateOrUpdateLine(DirectionNewNode direction)
+    {
+        var link = links.FirstOrDefault(l => l.direction == direction);
+        if (link != null)
+        {
+            if (link.Line.Rank < Game.MaxLine)
+            {
+                link.Line.SetNewRank();
+            }
+            else
+            {
+                game.DestroyLine(gamePosition, direction);
+                link.Line.DestroyLine();
+                links.Remove(link);
+                link.SecondNode.RemoveLink(link);
+            }
+        }
+        else if (game.TryGetLink(gamePosition, direction, out var node, out var line))
+        {
+            var newLink = new NodeLink() { FirstNode = this, SecondNode = node, direction = direction, Line = line };
+            links.Add(newLink);
+            node.AddLink(newLink);
+        }
+    }
 }

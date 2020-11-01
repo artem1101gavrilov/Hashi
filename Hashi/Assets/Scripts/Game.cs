@@ -9,6 +9,7 @@ public class Game : MonoBehaviour
 
     private const int sizeHorizontal = 7;
     private const int sizeVertical = 10;
+    public const int MaxLine = 2;
 
     /// <summary>
     /// Игровое поле.
@@ -57,6 +58,197 @@ public class Game : MonoBehaviour
             SetGameArray();
             SetPowers();
         }
+    }
+
+    public void DestroyLine((int x, int y) position, DirectionNewNode direction)
+    {
+        switch (direction)
+        {
+            case DirectionNewNode.Up:
+                // Забить дорогу в поле
+                for (int upLine = position.x - 1; upLine >= 0; upLine--)
+                {
+                    if (gameArray[upLine, position.y] == -1)
+                    {
+                        gameArray[upLine, position.y] = 0;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                break;
+            case DirectionNewNode.Left:
+                for (int leftLine = position.y - 1; leftLine >= 0; leftLine--)
+                {
+                    if (gameArray[position.x, leftLine] == -1)
+                    {
+                        gameArray[position.x, leftLine] = 0;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                break;
+            case DirectionNewNode.Down:
+                for (int downLine = position.x + 1; downLine < sizeHorizontal; downLine--)
+                {
+                    if (gameArray[downLine, position.y] == -1)
+                    {
+                        gameArray[downLine, position.y] = 0;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                break;
+            case DirectionNewNode.Right:
+                for (int rightLine = position.y + 1; rightLine < sizeVertical; rightLine--)
+                {
+                    if (gameArray[position.x, rightLine] == -1)
+                    {
+                        gameArray[position.x, rightLine] = 0;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                break;
+        }
+    }
+
+    public bool TryGetLink((int x, int y) position, DirectionNewNode direction, out Node node, out LineHashi line)
+    {
+        node = null;
+        line = null;
+        switch(direction)
+        {
+            case DirectionNewNode.Up:
+                int up = position.x - 1;
+                for (; up >= 0; up--)
+                {
+                    if (gameArray[up, position.y] == -1)
+                    {
+                        return false;
+                    }
+                    else if(gameArray[up, position.y] > 0)
+                    {
+                        break;
+                    }
+                }
+                if (up == -1) return false;
+                // Забить дорогу в поле
+                for (int upLine = position.x - 1; upLine >= 0; upLine--)
+                {
+                    if (gameArray[upLine, position.y] == 0)
+                    {
+                        gameArray[upLine, position.y] = -1;
+                    }
+                    else 
+                    {
+                        break;
+                    }
+                }
+                var thisNode = nodes[gameArray[position.x, position.y] - 1];
+                node = nodes[gameArray[up, position.y] - 1];
+                line = Instantiate(LinePrefab).GetComponent<LineHashi>();
+                line.SetLine(thisNode.transform, node.transform);
+                return true;
+            case DirectionNewNode.Left:
+                int i = position.y - 1;
+                for (; i >= 0; i--)
+                {
+                    if (gameArray[position.x, i] == -1)
+                    {
+                        return false;
+                    }
+                    else if (gameArray[position.x, i] > 0)
+                    {
+                        break;
+                    }
+                }
+                if (i == -1) return false;
+                for (int leftLine = position.y - 1; leftLine >= 0; leftLine--)
+                {
+                    if (gameArray[position.x, leftLine] == 0)
+                    {
+                        gameArray[position.x, leftLine] = -1;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                var thisNodeLeft = nodes[gameArray[position.x, position.y] - 1];
+                node = nodes[gameArray[position.x, i] - 1];
+                line = Instantiate(LinePrefab).GetComponent<LineHashi>();
+                line.SetLine(thisNodeLeft.transform, node.transform);
+                return true;
+            case DirectionNewNode.Down:
+                int down = position.x + 1;
+                for (; down < sizeHorizontal; down++)
+                {
+                    if (gameArray[down, position.y] == -1)
+                    {
+                        return false;
+                    }
+                    else if (gameArray[down, position.y] > 0)
+                    {
+                        break;
+                    }
+                }
+                if (down == sizeHorizontal) return false;
+                for (int downLine = position.x + 1; downLine < sizeHorizontal; downLine--)
+                {
+                    if (gameArray[downLine, position.y] == 0)
+                    {
+                        gameArray[downLine, position.y] = -1;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                var thisNodeDown = nodes[gameArray[position.x, position.y] - 1];
+                node = nodes[gameArray[down, position.y] - 1];
+                line = Instantiate(LinePrefab).GetComponent<LineHashi>();
+                line.SetLine(thisNodeDown.transform, node.transform);
+                return true;
+            case DirectionNewNode.Right:
+                int right = position.y + 1;
+                for (; right < sizeVertical; right++)
+                {
+                    if (gameArray[position.x, right] == -1)
+                    {
+                        return false;
+                    }
+                    else if (gameArray[position.x, right] > 0)
+                    {
+                        break;
+                    }
+                }
+                if (right == sizeVertical) return false;
+                for (int rightLine = position.y + 1; rightLine < sizeVertical; rightLine--)
+                {
+                    if (gameArray[position.x, rightLine] == 0)
+                    {
+                        gameArray[position.x, rightLine] = -1;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                var thisNodeRight = nodes[gameArray[position.x, position.y] - 1];
+                node = nodes[gameArray[position.x, right] - 1];
+                line = Instantiate(LinePrefab).GetComponent<LineHashi>();
+                line.SetLine(thisNodeRight.transform, node.transform);
+                return true;
+        }
+        return false;
     }
 
     private void SetSizes()
@@ -196,6 +388,18 @@ public class Game : MonoBehaviour
                 }
             }
         }
+
+        // Очистка поля от дорог
+        for (int i = 0; i < sizeHorizontal; i++)
+        {
+            for (int j = 0; j < sizeVertical; j++)
+            {
+                if (gameArray[i, j] == -1)
+                {
+                    gameArray[i, j] = 0;
+                }
+            }
+        }
     }
 
     private bool CheckLeft((int x, int y) currentPoint)
@@ -260,7 +464,7 @@ public class Game : MonoBehaviour
     {
         foreach (var link in links)
         {
-            var rnd = Random.Range(1, 4);
+            var rnd = Random.Range(1, MaxLine + 1);
             nodes[link.first - 1].Power += rnd;
             nodes[link.second - 1].Power += rnd;
         }

@@ -21,7 +21,14 @@ public class LineHashi : MonoBehaviour
     public void SetNewRank()
     {
         Rank++;
-        DrawLine();
+        if (Rank <= 3)
+        {
+            DrawLine();
+        }
+        else
+        {
+            DestroyLine();
+        }
     }
 
     public void DestroyLine()
@@ -55,7 +62,7 @@ public class LineHashi : MonoBehaviour
     private void DrawTwoLines()
     {
         lineRenderer.positionCount = 4;
-        if((startPosition.y - endPosition.y < 0.1f) && (startPosition.x - endPosition.x > 0.1f))
+        if((Mathf.Abs(startPosition.y - endPosition.y) < 0.1f) && (Mathf.Abs(startPosition.x - endPosition.x) > 0.1f))
         {
             lineRenderer.SetPosition(0, startPosition + new Vector3(0, 0.2f));
             lineRenderer.SetPosition(1, endPosition + new Vector3(0, 0.2f));
@@ -74,7 +81,7 @@ public class LineHashi : MonoBehaviour
     private void DrawThreeLines()
     {
         lineRenderer.positionCount = 6;
-        if ((startPosition.y - endPosition.y < 0.1f) && (startPosition.x - endPosition.x > 0.1f))
+        if ((Mathf.Abs(startPosition.y - endPosition.y) < 0.1f) && (Mathf.Abs(startPosition.x - endPosition.x) > 0.1f))
         {
             lineRenderer.SetPosition(0, startPosition + new Vector3(0, 0.2f));
             lineRenderer.SetPosition(1, endPosition + new Vector3(0, 0.2f));

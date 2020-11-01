@@ -6,7 +6,6 @@ public class NodeLink
 {
     public Node FirstNode { get; set; }
     public Node SecondNode { get; set; }
-    public int Power { get; set; }
     public DirectionNewNode direction { get; set; }
     public LineHashi Line { get; set; }
 }
